@@ -55,6 +55,10 @@ class GameWidget(Widget):
             cur_x -= step
         if 'd' in self.pressed_keys:
             cur_x += step
+            
+        if cur_x < -200 or cur_x > self.width or cur_y < -200 or cur_y > self.height:
+            App.get_running_app().stop()
+    
         self.character.pos = (cur_x, cur_y)
 
 class MainApp(App):
