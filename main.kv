@@ -1,19 +1,21 @@
+#: import MainMenu menu.MainMenu
+
+<MainMenu>:
+    Button:
+        text: "Start Game"
+        size_hint: None, None
+        size: 200, 50
+        pos_hint: {"center_x": 0.5, "center_y": 0.6}
+        on_press: root.start_app()
+
 <Background>:
-    id: background
     canvas.before:
         Rectangle:
             size: self.size
             pos: self.pos
             source: "background.png"
-<Character>:
-    id: character
-    source: "character.png"
+
+<Button>:
     size_hint: None, None
-    size: 400,300
-    pos: self.pos
-<Label>:
-    id: score
-    size_hint_y: None
-    height: 96
-    text: "0"
-    font_size: 40
+    size: 200, 50
+

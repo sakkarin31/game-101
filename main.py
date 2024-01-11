@@ -9,7 +9,12 @@ from kivy.properties import NumericProperty, ObjectProperty
 from kivy.graphics import Rectangle
 from kivy.lang import Builder
 from random import randint
+
+from menu import MainMenu
 Builder.load_file('main.kv')
+
+
+
 def collides(rect1, rect2):
     return (
         rect1[0] < rect2[0] + rect2[2] and
@@ -26,7 +31,7 @@ class Character(Image):
 class Button(Widget):
     pass
 class Arrow(Image):
-    velocity = NumericProperty(3)
+    velocity = NumericProperty(0)
 
 
 class ArrowHandler(Widget):
@@ -79,7 +84,11 @@ class GameWidget(Widget):
         arrow = self.arrow_handler.create_arrow(pos)
     
     def start_app(self):
-        pass
+        print("Start Game button pressed")
+        self.character.pos = (100, 100)
+        self.create_enemy()
+        self.enemy_speed = 600
+        self.arrow_handler.start_creating_arrows()
         
     def _on_keyboard_closed(self):
         self._keyboard.unbind(on_key_down=self._on_key_down)
@@ -132,13 +141,16 @@ class GameWidget(Widget):
         self.character.pos = (cur_x, cur_y)
 
     def gameover(self):
-        App.get_running_app().stop()
+        App.get_running_app().root.current = 'menu'
 
 class MainApp(App):
     def build(self):
         float_layout = FloatLayout()
         background = Background()
         game_widget = GameWidget()
+        menu_screen = MainMenu()
+        menu_screen.on_start_button_press(game_widget.start_app)
+        float_layout.add_widget(menu_screen)
         float_layout.add_widget(background)
         float_layout.add_widget(game_widget)
         return float_layout
