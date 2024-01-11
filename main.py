@@ -4,10 +4,12 @@ from kivy.core.window import Window
 from kivy.uix.image import Image
 from kivy.clock import Clock
 from kivy.uix.floatlayout import FloatLayout
+from kivy.uix.boxlayout import BoxLayout
 from kivy.properties import NumericProperty, ObjectProperty
 from kivy.graphics import Rectangle
+from kivy.lang import Builder
 from random import randint
-
+Builder.load_file('main.kv')
 def collides(rect1, rect2):
     return (
         rect1[0] < rect2[0] + rect2[2] and
@@ -21,8 +23,11 @@ class Background(Widget):
 class Character(Image):
     velocity = NumericProperty(0)
 
+class Button(Widget):
+    pass
 class Arrow(Image):
     velocity = NumericProperty(0)
+
 
 class GameWidget(Widget):
     enemy_pos = ObjectProperty((2000, 300))
@@ -32,7 +37,6 @@ class GameWidget(Widget):
         super().__init__(**kwargs)
         self.character = Character()
         self.add_widget(self.character)
-
         self._keyboard = Window.request_keyboard(
             self._on_keyboard_closed, self)
         self._keyboard.bind(on_key_down=self._on_key_down)
@@ -44,14 +48,18 @@ class GameWidget(Widget):
     def create_enemy(self):
         self.enemy_pos = (Window.height, randint(1, Window.width + 500))
         with self.canvas:
-            self.enemy = Rectangle(source='arrowๅ.png', pos=self.enemy_pos, size=(300, 180))
+            self.enemy = Rectangle(source='arrow.png', pos=self.enemy_pos, size=(300, 180))
         self.create_arrow()
-
+        
     def create_arrow(self):
         arrow = Arrow(source='arrow.png', pos=self.enemy_pos, size=(50, 50))
         self.add_widget(arrow)
         return arrow
-
+    
+    def start_app(self):
+        pass
+        
+        
     def _on_keyboard_closed(self):
         self._keyboard.unbind(on_key_down=self._on_key_down)
         self._keyboard.unbind(on_key_up=self._on_key_up)
@@ -63,7 +71,7 @@ class GameWidget(Widget):
             self.character.source = "jumpright.png"
         if text == 'a':
             self.character.source = "jumpleft.png"
-
+            
     def _on_key_up(self, keyboard, keycode):
         text = keycode[1]
         self.character.source = "character.png"
@@ -111,6 +119,7 @@ class GameWidget(Widget):
 
 class MainApp(App):
     def build(self):
+         
         float_layout = FloatLayout()
         background = Background()
         game_widget = GameWidget()
