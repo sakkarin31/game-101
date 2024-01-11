@@ -26,8 +26,29 @@ class Character(Image):
 class Button(Widget):
     pass
 class Arrow(Image):
-    velocity = NumericProperty(0)
+    velocity = NumericProperty(3)
 
+
+class ArrowHandler(Widget):
+    creating_arrows = True  
+
+    def create_arrow(self, pos):
+        if self.creating_arrows:
+            arrow = Arrow(source='arrow.png', pos=pos, size=(50, 50))
+            self.add_widget(arrow)
+            return arrow
+
+    def stop_creating_arrows(self):
+        self.creating_arrows = False
+
+    def start_creating_arrows(self):
+        self.creating_arrows = True
+
+    def move_arrow(self, dt):
+        for arrow in self.children:
+            if isinstance(arrow, Arrow):
+                arrow.x -= 500 * dt
+                arrow.y += 200 * dt
 
 class GameWidget(Widget):
     enemy_pos = ObjectProperty((2000, 300))
@@ -37,6 +58,8 @@ class GameWidget(Widget):
         super().__init__(**kwargs)
         self.character = Character()
         self.add_widget(self.character)
+        self.arrow_handler = ArrowHandler()
+        self.add_widget(self.arrow_handler)
         self._keyboard = Window.request_keyboard(
             self._on_keyboard_closed, self)
         self._keyboard.bind(on_key_down=self._on_key_down)
@@ -48,17 +71,15 @@ class GameWidget(Widget):
     def create_enemy(self):
         self.enemy_pos = (Window.height, randint(1, Window.width + 500))
         with self.canvas:
-            self.enemy = Rectangle(source='arrow.png', pos=self.enemy_pos, size=(300, 180))
+            self.enemy = Rectangle(source='arrow.png', pos=self.enemy_pos, size=(280, 180))
         self.create_arrow()
         
     def create_arrow(self):
-        arrow = Arrow(source='arrow.png', pos=self.enemy_pos, size=(50, 50))
-        self.add_widget(arrow)
-        return arrow
+        pos = (self.enemy_pos[1], self.enemy_pos[0])
+        arrow = self.arrow_handler.create_arrow(pos)
     
     def start_app(self):
         pass
-        
         
     def _on_keyboard_closed(self):
         self._keyboard.unbind(on_key_down=self._on_key_down)
@@ -97,29 +118,24 @@ class GameWidget(Widget):
             self.create_enemy()
 
         if collides((cur_x, cur_y, 50, 50), (self.enemy_pos[0], self.enemy_pos[1], self.enemy.size[0] - 200, self.enemy.size[1] - 100)):
-            self.stop_game()
+            self.gameover()
 
-        for arrow in self.children:
+        for arrow in self.arrow_handler.children:
             if isinstance(arrow, Arrow) and collides((cur_x, cur_y, 50, 50), (arrow.x, arrow.y, arrow.width, arrow.height)):
-                self.stop_game()
+                self.gameover()
 
-        self.children = [child for child in self.children if not isinstance(child, Arrow) or 0 < child.x < Window.width and 0 < child.y < Window.height]
-
-        for arrow in self.children:
-            if isinstance(arrow, Arrow):
-                arrow.x -= 500 * dt
+        self.arrow_handler.move_arrow(dt)
 
         if cur_x < -200 or cur_x > Window.width - 200 or cur_y < -200 or cur_y > Window.height - 200:
-            self.stop_game()
+            self.gameover()
 
         self.character.pos = (cur_x, cur_y)
 
-    def stop_game(self):
+    def gameover(self):
         App.get_running_app().stop()
 
 class MainApp(App):
     def build(self):
-         
         float_layout = FloatLayout()
         background = Background()
         game_widget = GameWidget()
