@@ -32,7 +32,7 @@ class Character(Image):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.size_hint = (None, None)  
-        self.size = (300, 200)
+        self.size = (400, 300)
 
 class Arrow(Image):
     velocity = NumericProperty(0)
@@ -130,7 +130,7 @@ class MainApp(Screen):
         if self.enemy_pos[1] < -100:
             self.create_enemy()
 
-        if collides((cur_x, cur_y, 50, 50), (self.enemy_pos[0], self.enemy_pos[1], self.enemy.size[0] - 200, self.enemy.size[1] - 100)):
+        if collides((cur_x, cur_y, 50, 50), (self.enemy_pos[0], self.enemy_pos[1], self.enemy.size[0] - 250, self.enemy.size[1] - 180)):
             self.gameover()
 
         for arrow in self.arrow_handler.children:
@@ -144,8 +144,11 @@ class MainApp(Screen):
 
         self.character.pos = (cur_x, cur_y)
 
+    def switch_to_menu(self):
+        self.parent.current = 'menu'
+
     def gameover(self):
-        App.get_running_app().stop()
+        self.switch_to_menu()
 
 class TestApp(App):
 
@@ -159,7 +162,7 @@ class TestApp(App):
         button_layout.add_widget(quit_button)
         menu_screen.add_widget(button_layout)
         sm.add_widget(menu_screen)
-        #background = Background()
+        background = Background()
         game_screen = MainApp(name='game')
         sm.add_widget(game_screen)
         game_screen.add_widget(background)
