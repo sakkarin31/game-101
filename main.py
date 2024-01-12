@@ -139,7 +139,7 @@ class MainApp(Screen):
 
         self.arrow_handler.move_arrow(dt)
 
-        if cur_x < -200 or cur_x > Window.width - 200 or cur_y < -200 or cur_y > Window.height - 200:
+        if cur_x < -200 or cur_x > Window.width - 100 or cur_y < -100 or cur_y > Window.height - 100:
             self.gameover()
 
         self.character.pos = (cur_x, cur_y)
@@ -159,7 +159,7 @@ class TestApp(App):
         button_layout.add_widget(quit_button)
         menu_screen.add_widget(button_layout)
         sm.add_widget(menu_screen)
-        background = Background()
+        #background = Background()
         game_screen = MainApp(name='game')
         sm.add_widget(game_screen)
         game_screen.add_widget(background)
