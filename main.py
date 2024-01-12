@@ -29,6 +29,11 @@ class Background(Widget):
 class Character(Image):
     velocity = NumericProperty(0)
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.size_hint = (None, None)  
+        self.size = (300, 200)
+
 class Arrow(Image):
     velocity = NumericProperty(0)
 
@@ -62,7 +67,9 @@ class MainApp(Screen):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.character = Character()
+        self.background = Background() 
+        self.add_widget(self.background)
+        self.character = Character(size=(50, 50))
         self.add_widget(self.character)
         self.arrow_handler = ArrowHandler()
         self.add_widget(self.arrow_handler)
@@ -152,10 +159,10 @@ class TestApp(App):
         button_layout.add_widget(quit_button)
         menu_screen.add_widget(button_layout)
         sm.add_widget(menu_screen)
-
+        background = Background()
         game_screen = MainApp(name='game')
         sm.add_widget(game_screen)
-
+        game_screen.add_widget(background)
         return sm
 
     def switch_to_game(self, instance):
