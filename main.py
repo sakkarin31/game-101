@@ -67,9 +67,9 @@ class MainApp(Screen):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.background = Background() 
+        self.background = Image(source='background.png', size=(Window.width, Window.height), pos=(0, 0))
         self.add_widget(self.background)
-        self.character = Character(size=(50, 50))
+        self.character = Character()
         self.add_widget(self.character)
         self.arrow_handler = ArrowHandler()
         self.add_widget(self.arrow_handler)
