@@ -1,26 +1,27 @@
 from kivy.app import App
-from kivy.uix.widget import Widget
-from kivy.core.window import Window
-from kivy.uix.image import Image
-from kivy.clock import Clock
-from kivy.uix.floatlayout import FloatLayout
+from kivy.uix.screenmanager import ScreenManager, Screen
+from kivy.uix.button import Button
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.label import Label
+from kivy.uix.image import Image
+from kivy.core.window import Window
+from kivy.uix.widget import Widget
+from kivy.uix.floatlayout import FloatLayout
 from kivy.properties import NumericProperty, ObjectProperty
 from kivy.graphics import Rectangle
-from kivy.lang import Builder
+from kivy.clock import Clock
 from random import randint
-
-from menu import MainMenu
-Builder.load_file('main.kv')
-
-
 
 def collides(rect1, rect2):
     return (
         rect1[0] < rect2[0] + rect2[2] and
         rect1[0] + rect1[2] > rect2[0] and
         rect1[1] < rect2[1] + rect2[3] and
-        rect1[1] + rect1[3] > rect2[1])
+        rect1[1] + rect1[3] > rect2[1]
+    )
+
+class MainMenu(Screen):
+    pass
 
 class Background(Widget):
     pass
@@ -28,11 +29,8 @@ class Background(Widget):
 class Character(Image):
     velocity = NumericProperty(0)
 
-class Button(Widget):
-    pass
 class Arrow(Image):
     velocity = NumericProperty(0)
-
 
 class ArrowHandler(Widget):
     creating_arrows = True  
@@ -56,6 +54,9 @@ class ArrowHandler(Widget):
                 arrow.y += 200 * dt
 
 class GameWidget(Widget):
+    pass
+
+class MainApp(Screen):
     enemy_pos = ObjectProperty((2000, 300))
     enemy_speed = 600
 
@@ -78,18 +79,14 @@ class GameWidget(Widget):
         with self.canvas:
             self.enemy = Rectangle(source='arrow.png', pos=self.enemy_pos, size=(280, 180))
         self.create_arrow()
-        
+
     def create_arrow(self):
         pos = (self.enemy_pos[1], self.enemy_pos[0])
         arrow = self.arrow_handler.create_arrow(pos)
-    
+
     def start_app(self):
-        print("Start Game button pressed")
-        self.character.pos = (100, 100)
-        self.create_enemy()
-        self.enemy_speed = 600
-        self.arrow_handler.start_creating_arrows()
-        
+        pass
+
     def _on_keyboard_closed(self):
         self._keyboard.unbind(on_key_down=self._on_key_down)
         self._keyboard.unbind(on_key_up=self._on_key_up)
@@ -101,7 +98,7 @@ class GameWidget(Widget):
             self.character.source = "jumpright.png"
         if text == 'a':
             self.character.source = "jumpleft.png"
-            
+
     def _on_key_up(self, keyboard, keycode):
         text = keycode[1]
         self.character.source = "character.png"
@@ -141,19 +138,31 @@ class GameWidget(Widget):
         self.character.pos = (cur_x, cur_y)
 
     def gameover(self):
-        App.get_running_app().root.current = 'menu'
+        App.get_running_app().stop()
 
-class MainApp(App):
+class TestApp(App):
+
     def build(self):
-        float_layout = FloatLayout()
-        background = Background()
-        game_widget = GameWidget()
-        menu_screen = MainMenu()
-        menu_screen.on_start_button_press(game_widget.start_app)
-        float_layout.add_widget(menu_screen)
-        float_layout.add_widget(background)
-        float_layout.add_widget(game_widget)
-        return float_layout
+        sm = ScreenManager()
+        menu_screen = MainMenu(name='menu')
+        button_layout = BoxLayout(orientation='vertical')
+        start_button = Button(text='Go to Game', on_press=self.switch_to_game)
+        quit_button = Button(text='Quit', on_press=self.quit_app)
+        button_layout.add_widget(start_button)
+        button_layout.add_widget(quit_button)
+        menu_screen.add_widget(button_layout)
+        sm.add_widget(menu_screen)
+
+        game_screen = MainApp(name='game')
+        sm.add_widget(game_screen)
+
+        return sm
+
+    def switch_to_game(self, instance):
+        self.root.current = 'game'
+
+    def quit_app(self, instance):
+        App.get_running_app().stop()
 
 if __name__ == "__main__":
-    MainApp().run()
+    TestApp().run()
