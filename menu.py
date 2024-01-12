@@ -1,3 +1,4 @@
+from kivy.app import App
 from kivy.uix.widget import Widget
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
@@ -15,3 +16,10 @@ class MainMenu(BoxLayout):
 
     def on_start_button_press(self, instance):
         print("Start Game button pressed")
+
+class MyApp(App):
+    def build(self):
+        return MainMenu()
+
+if __name__ == "__main__":
+    MyApp().run()
