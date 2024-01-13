@@ -81,8 +81,12 @@ class MainApp(Screen):
         self._keyboard.bind(on_key_up=self._on_key_up)
         self.pressed_keys = set()
         Clock.schedule_interval(self.character_move, 1/60)
+        self.reset_game()
+
+    def reset_game(self):
+        self.character.pos = (50, 50)
         self.create_enemy()
-        popup = None
+        self.arrow_handler.clear_widgets()
 
     def create_enemy(self):
         self.enemy_pos = (Window.height, randint(1, Window.width + 500))
@@ -93,9 +97,6 @@ class MainApp(Screen):
     def create_arrow(self):
         pos = (self.enemy_pos[1], self.enemy_pos[0])
         arrow = self.arrow_handler.create_arrow(pos)
-
-    def start_app(self):
-        pass
 
     def _on_keyboard_closed(self):
         self._keyboard.unbind(on_key_down=self._on_key_down)
@@ -159,6 +160,7 @@ class MainApp(Screen):
         self.popup.open()
          
         Clock.schedule_once(lambda dt: self.switch_to_menu(), 3)
+
 class TestApp(App):
 
     def build(self):
@@ -179,6 +181,7 @@ class TestApp(App):
 
     def switch_to_game(self, instance):
         self.root.current = 'game'
+        self.root.get_screen('game').reset_game()
 
     def quit_app(self, instance):
         App.get_running_app().stop()
