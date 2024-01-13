@@ -157,8 +157,7 @@ class MainApp(Screen):
     
         self.popup = Popup(title='Game Over', content=content, size_hint=(None, None), size=(400, 200))
         self.popup.open()
-        
-        Clock.schedule_once(lambda dt: self.popup.dismiss(), 3) 
+         
         Clock.schedule_once(lambda dt: self.switch_to_menu(), 3)
 class TestApp(App):
 
