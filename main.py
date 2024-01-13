@@ -82,7 +82,7 @@ class MainApp(Screen):
         self.pressed_keys = set()
         Clock.schedule_interval(self.character_move, 1/60)
         self.create_enemy()
-        self.gameover_popup = None
+        popup = None
 
     def create_enemy(self):
         self.enemy_pos = (Window.height, randint(1, Window.width + 500))
@@ -148,17 +148,18 @@ class MainApp(Screen):
         self.character.pos = (cur_x, cur_y)
 
     def switch_to_menu(self):
-        if self.parent:
-            self.parent.current = 'menu'
+        self.popup.dismiss()
+        App.get_running_app().root.current = 'menu'
 
     def gameover(self):
         content = BoxLayout(orientation='vertical')
         content.add_widget(Label(text='Game Over', font_size=30))
-
-
-        self.gameover_popup = Popup(title='Game Over', content=content, size_hint=(None, None), size=(400, 200))
-        self.gameover_popup.open()
+    
+        self.popup = Popup(title='Game Over', content=content, size_hint=(None, None), size=(400, 200))
+        self.popup.open()
         
+        Clock.schedule_once(lambda dt: self.popup.dismiss(), 3) 
+        Clock.schedule_once(lambda dt: self.switch_to_menu(), 3)
 class TestApp(App):
 
     def build(self):
