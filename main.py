@@ -66,7 +66,9 @@ class GameWidget(Widget):
 class MainApp(Screen):
     enemy_pos = ObjectProperty((2000, 300))
     enemy_speed = 600
-
+    countdown_label = Label(text='', font_size=20, pos_hint={'right': 1, 'top': 1})
+    countdown_seconds = 5
+    game_over = False 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.background = Image(source='background.png', size=(Window.width, Window.height), pos=(0, 0))
@@ -75,6 +77,8 @@ class MainApp(Screen):
         self.add_widget(self.character)
         self.arrow_handler = ArrowHandler()
         self.add_widget(self.arrow_handler)
+        self.add_widget(self.countdown_label)
+        Clock.schedule_interval(self.update_countdown, 1)
         self._keyboard = Window.request_keyboard(
             self._on_keyboard_closed, self)
         self._keyboard.bind(on_key_down=self._on_key_down)
@@ -82,7 +86,17 @@ class MainApp(Screen):
         self.pressed_keys = set()
         Clock.schedule_interval(self.character_move, 1/60)
         self.reset_game()
+    
+    def update_countdown(self, dt):
+        if not self.game_over:
+            self.countdown_seconds -= 1
+            self.countdown_label.text = f'Time left: {self.countdown_seconds} seconds'
 
+            if self.countdown_seconds <= 0:
+                self.game_over = True
+                self.countdown_label.text = 'WOWWWWWWWWWWWWWWWWW!!!!!!!!'
+                self.show_congrat_popup()
+                
     def reset_game(self):
         self.character.pos = (50, 50)
         self.create_enemy()
@@ -153,14 +167,27 @@ class MainApp(Screen):
         App.get_running_app().root.current = 'menu'
 
     def gameover(self):
-        content = BoxLayout(orientation='vertical')
-        content.add_widget(Label(text='Game Over', font_size=30))
+        self.game_over = True
+        self.show_gameover_popup()
     
-        self.popup = Popup(title='Game Over', content=content, size_hint=(None, None), size=(400, 200))
-        self.popup.open()
-         
-        Clock.schedule_once(lambda dt: self.switch_to_menu(), 3)
+    def show_gameover_popup(self):
+        content = BoxLayout(orientation='vertical')
+        content.add_widget(Label(text='Gameover!', font_size=20))
 
+        self.popup = Popup(title='Haha!! ', content=content, size_hint=(None, None), size=(400, 200))
+        self.popup.open()
+
+        Clock.schedule_once(lambda dt: self.switch_to_menu(), 5)
+        
+    def show_congrat_popup(self):
+        content = BoxLayout(orientation='vertical')
+        content.add_widget(Label(text='Congratulations! You completed the game.', font_size=20))
+
+        self.popup = Popup(title='Good Job!!', content=content, size_hint=(None, None), size=(400, 200))
+        self.popup.open()
+
+        Clock.schedule_once(lambda dt: self.switch_to_menu(), 5)
+        
 class TestApp(App):
 
     def build(self):
