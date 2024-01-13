@@ -9,6 +9,7 @@ from kivy.uix.widget import Widget
 from kivy.uix.floatlayout import FloatLayout
 from kivy.properties import NumericProperty, ObjectProperty
 from kivy.graphics import Rectangle
+from kivy.uix.popup import Popup
 from kivy.clock import Clock
 from random import randint
 
@@ -33,6 +34,7 @@ class Character(Image):
         super().__init__(**kwargs)
         self.size_hint = (None, None)  
         self.size = (400, 300)
+        self.pos = 50,50
 
 class Arrow(Image):
     velocity = NumericProperty(0)
@@ -80,6 +82,7 @@ class MainApp(Screen):
         self.pressed_keys = set()
         Clock.schedule_interval(self.character_move, 1/60)
         self.create_enemy()
+        self.gameover_popup = None
 
     def create_enemy(self):
         self.enemy_pos = (Window.height, randint(1, Window.width + 500))
@@ -145,11 +148,17 @@ class MainApp(Screen):
         self.character.pos = (cur_x, cur_y)
 
     def switch_to_menu(self):
-        self.parent.current = 'menu'
+        if self.parent:
+            self.parent.current = 'menu'
 
     def gameover(self):
-        self.switch_to_menu()
+        content = BoxLayout(orientation='vertical')
+        content.add_widget(Label(text='Game Over', font_size=30))
 
+
+        self.gameover_popup = Popup(title='Game Over', content=content, size_hint=(None, None), size=(400, 200))
+        self.gameover_popup.open()
+        
 class TestApp(App):
 
     def build(self):
