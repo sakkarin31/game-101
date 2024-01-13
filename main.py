@@ -67,7 +67,9 @@ class MainApp(Screen):
     enemy_pos = ObjectProperty((2000, 300))
     enemy_speed = 600
     countdown_label = Label(text='', font_size=20, pos_hint={'right': 1, 'top': 1})
-    countdown_seconds = 5
+    countdown_seconds = 120
+    initial_enemy_speed = 600
+    initial_countdown_seconds = 120
     game_over = False 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -90,6 +92,7 @@ class MainApp(Screen):
     def update_countdown(self, dt):
         if not self.game_over:
             self.countdown_seconds -= 1
+            self.enemy_speed += 10
             self.countdown_label.text = f'Time left: {self.countdown_seconds} seconds'
 
             if self.countdown_seconds <= 0:
@@ -99,6 +102,10 @@ class MainApp(Screen):
                 
     def reset_game(self):
         self.character.pos = (50, 50)
+        self.countdown_seconds = self.initial_countdown_seconds
+        self.enemy_speed = self.initial_enemy_speed
+        self.game_over = False
+        self.countdown_label.text = f'Time left: {self.countdown_seconds} seconds'
         self.create_enemy()
         self.arrow_handler.clear_widgets()
 
