@@ -36,7 +36,6 @@ class MainMenu(Screen):
         button_layout.add_widget(start_button)
         button_layout.add_widget(sound_button)
         button_layout.add_widget(quit_button)
-        
 
         self.add_widget(button_layout)
 
@@ -56,6 +55,7 @@ class MainMenu(Screen):
 
     def on_sound_button_state(self, instance, value):
         instance.text = f"Sound: {'On' if value == 'down' else 'Off'}"
+        
 class Character(Image):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -120,6 +120,9 @@ class MainApp(Screen):
         self.add_widget(self.arrow_handler)
         self.add_widget(self.countdown_label)
         self.hp = 100 
+        self.pause_button = Button(text='Pause', size_hint=(None, None), size=(100, 50), )
+        self.pause_button.bind(on_press=self.pause_game)
+        self.add_widget(self.pause_button)
         enemy = ObjectProperty(None)    
         self.hp_label = Label(text=f'HP: {self.hp}', font_size=20, pos_hint={'right': 1, 'top': 0.95})
         self.add_widget(self.hp_label)
@@ -158,6 +161,31 @@ class MainApp(Screen):
         self.create_enemy()
         self.arrow_handler.clear_widgets()
         
+    def pause_game(self, *args):
+        Clock.unschedule(self.character_move)
+        self.arrow_handler.stop_creating_arrows()
+        Clock.unschedule(self.update_countdown)
+        self.show_pause_popup()
+
+    def show_pause_popup(self):
+        self.resume_button = Button(text='Resume', size_hint=(None, None), size=(100, 50))
+        self.resume_button.bind(on_press=self.resume_game)
+        content = BoxLayout(orientation='vertical')
+        content.add_widget(Label(text='Game Paused', font_size=20))
+        content.add_widget(self.resume_button)
+        
+        
+
+        self.popup = Popup(title='Pause', content=content, size_hint=(None, None), size=(400, 200))
+        self.popup.open()
+        self.popup.content.size_hint_y = None
+        self.popup.content.height = self.resume_button.height
+        
+    def resume_game(self, *args):
+        Clock.schedule_interval(self.character_move, 1 / 60)
+        self.arrow_handler.start_creating_arrows()
+        Clock.schedule_interval(self.update_countdown, 1)
+        self.popup.dismiss()
         
     def update_hp_label(self):
         self.hp_label.text = f'HP: {self.hp}'
@@ -177,7 +205,7 @@ class MainApp(Screen):
         self.update_hp_label()
 
     def create_enemy(self):
-        self.enemy_pos = (Window.height, randint(1, Window.width + 500))
+        self.enemy_pos = (Window.height, randint(1, Window.width + 800))
         with self.canvas:
             self.enemy = Rectangle(source='arrow.png', pos=self.enemy_pos, size=(280, 180))
         self.create_arrow()
