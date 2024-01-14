@@ -34,8 +34,9 @@ class MainMenu(Screen):
         sound_button.bind(state=self.on_sound_button_state)
 
         button_layout.add_widget(start_button)
-        button_layout.add_widget(quit_button)
         button_layout.add_widget(sound_button)
+        button_layout.add_widget(quit_button)
+        
 
         self.add_widget(button_layout)
 
@@ -107,6 +108,7 @@ class MainApp(Screen):
     countdown_seconds = 120
     initial_enemy_speed = 600
     initial_countdown_seconds = 120
+    initial_hp = 100
     game_over = False 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -117,6 +119,11 @@ class MainApp(Screen):
         self.arrow_handler = ArrowHandler()
         self.add_widget(self.arrow_handler)
         self.add_widget(self.countdown_label)
+        self.hp = 100 
+        enemy = ObjectProperty(None)    
+        self.hp_label = Label(text=f'HP: {self.hp}', font_size=20, pos_hint={'right': 1, 'top': 0.95})
+        self.add_widget(self.hp_label)
+
         Clock.schedule_interval(self.update_countdown, 1)
         self._keyboard = Window.request_keyboard(
             self._on_keyboard_closed, self)
@@ -150,7 +157,24 @@ class MainApp(Screen):
         self.countdown_label.text = f'Time left: {self.countdown_seconds} seconds'
         self.create_enemy()
         self.arrow_handler.clear_widgets()
+        
+        
+    def update_hp_label(self):
+        self.hp_label.text = f'HP: {self.hp}'
 
+    def take_damage(self, damage):
+        self.hp -= damage
+        if self.hp <= 0:
+            self.hp = 0
+            self.game_over = True
+            self.show_gameover_popup()
+        self.update_hp_label()
+
+    def heal(self, healing_amount):
+        self.hp += healing_amount
+        if self.hp > 100: 
+            self.hp = 100
+        self.update_hp_label()
 
     def create_enemy(self):
         self.enemy_pos = (Window.height, randint(1, Window.width + 500))
@@ -183,7 +207,7 @@ class MainApp(Screen):
     def character_move(self, dt):
         cur_x = self.character.pos[0]
         cur_y = self.character.pos[1]
-        step = 200 * dt
+        step = 250 * dt
         if 'w' in self.pressed_keys:
             cur_y += step
         if 's' in self.pressed_keys:
@@ -199,16 +223,16 @@ class MainApp(Screen):
             self.create_enemy()
 
         if collides((cur_x, cur_y, 50, 50), (self.enemy_pos[0], self.enemy_pos[1], self.enemy.size[0] - 250, self.enemy.size[1] - 180)):
-            self.show_gameover_popup()
+            self.take_damage(5)
 
         for arrow in self.arrow_handler.children:
             if isinstance(arrow, Arrow) and collides((cur_x, cur_y, 50, 50), (arrow.x, arrow.y, arrow.width, arrow.height)):
-                self.show_gameover_popup()
+                self.take_damage(0)
 
         self.arrow_handler.move_arrow(dt)
 
         if cur_x < -200 or cur_x > Window.width - 100 or cur_y < -100 or cur_y > Window.height - 100:
-            self.show_gameover_popup()
+            self.show_free_popup()
 
         self.character.pos = (cur_x, cur_y)
 
@@ -228,7 +252,19 @@ class MainApp(Screen):
         self.popup.open()
 
         Clock.schedule_once(lambda dt: self.switch_to_menu(), 1)
+        
+    def show_free_popup(self):
+        content = BoxLayout(orientation='vertical')
+        content.add_widget(Label(text='Congratulations! You got the FREEDOMMM.', font_size=20))
+
+        self.popup = Popup(title='FREEEEEE!!', content=content, size_hint=(None, None), size=(400, 200))
+        self.popup.open()
+
+        Clock.schedule_once(lambda dt: self.quit(), 4)
     
+    def quit(self):
+        App.get_running_app().stop()
+        
     def switch_to_menu(self):
         self.popup.dismiss()
         self.reset_game()
