@@ -10,6 +10,8 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.properties import NumericProperty, ObjectProperty
 from kivy.graphics import Rectangle
 from kivy.uix.popup import Popup
+from kivy.core.audio import SoundLoader 
+from kivy.uix.togglebutton import ToggleButton
 from kivy.clock import Clock
 from random import randint
 
@@ -22,8 +24,37 @@ def collides(rect1, rect2):
     )
 
 class MainMenu(Screen):
-    pass
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        button_layout = BoxLayout(orientation='vertical')
+        start_button = Button(text='Go to Game', on_press=self.switch_to_game)
+        quit_button = Button(text='Quit', on_press=self.quit_app)
 
+        sound_button = ToggleButton(text='Sound: On', group='sound', on_press=self.toggle_sound)
+        sound_button.bind(state=self.on_sound_button_state)
+
+        button_layout.add_widget(start_button)
+        button_layout.add_widget(quit_button)
+        button_layout.add_widget(sound_button)
+
+        self.add_widget(button_layout)
+
+    def switch_to_game(self, instance):
+        self.manager.get_screen('game').reset_game()
+        self.manager.current = 'game'
+
+    def quit_app(self, instance):
+        App.get_running_app().stop()
+
+    def toggle_sound(self, instance):
+        game_screen = self.manager.get_screen('game')
+        if instance.state == 'down':
+            game_screen.play_background_music()
+        else:
+            game_screen.stop_background_music()
+
+    def on_sound_button_state(self, instance, value):
+        instance.text = f"Sound: {'On' if value == 'down' else 'Off'}"
 class Character(Image):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -51,7 +82,7 @@ class ArrowHandler(Widget):
     creating_arrows = True  
 
     def create_arrow(self, pos):
-        if self.creating_arrows:
+        if self.creating_arrows and not self.parent.game_over:
             arrow = Arrow(source='arrow.png', pos=pos, size=(50, 50))
             self.add_widget(arrow)
             return arrow
@@ -75,7 +106,7 @@ class MainApp(Screen):
     countdown_label = Label(text='', font_size=20, pos_hint={'right': 1, 'top': 1})
     countdown_seconds = 120
     initial_enemy_speed = 600
-    initial_countdown_seconds = 10
+    initial_countdown_seconds = 120
     game_over = False 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -94,8 +125,12 @@ class MainApp(Screen):
         self.pressed_keys = set()
         Clock.schedule_interval(self.character_move, 1/60)
         self.reset_game()
+        self.background_music = SoundLoader.load('sound_bg.mp3')
+        if self.background_music:
+            self.background_music.loop = True
+            self.background_music.volume = 0.1
+            self.background_music.play()
     
-
     def update_countdown(self, dt):
         if not self.game_over:
             self.countdown_seconds -= 1
@@ -115,6 +150,7 @@ class MainApp(Screen):
         self.countdown_label.text = f'Time left: {self.countdown_seconds} seconds'
         self.create_enemy()
         self.arrow_handler.clear_widgets()
+
 
     def create_enemy(self):
         self.enemy_pos = (Window.height, randint(1, Window.width + 500))
@@ -176,19 +212,13 @@ class MainApp(Screen):
 
         self.character.pos = (cur_x, cur_y)
 
-    def switch_to_menu(self):
-        self.popup.dismiss()
-        App.get_running_app().root.current = 'menu'
-
-    
     def show_gameover_popup(self):
         content = BoxLayout(orientation='vertical')
         content.add_widget(Label(text='Gameover!', font_size=20))
 
         self.popup = Popup(title='Haha!! ', content=content, size_hint=(None, None), size=(400, 200))
         self.popup.open()
-
-        Clock.schedule_once(lambda dt: self.switch_to_menu(), 5)
+        Clock.schedule_once(lambda dt: self.switch_to_menu(), 1)
         
     def show_congrat_popup(self):
         content = BoxLayout(orientation='vertical')
@@ -197,31 +227,29 @@ class MainApp(Screen):
         self.popup = Popup(title='Good Job!!', content=content, size_hint=(None, None), size=(400, 200))
         self.popup.open()
 
-        Clock.schedule_once(lambda dt: self.switch_to_menu(), 5)
-        
+        Clock.schedule_once(lambda dt: self.switch_to_menu(), 1)
+    
+    def switch_to_menu(self):
+        self.popup.dismiss()
+        self.reset_game()
+        App.get_running_app().root.current = 'menu'
+    
+    def play_background_music(self):
+        if self.background_music:
+            self.background_music.play()
+
+    def stop_background_music(self):
+        if self.background_music:
+            self.background_music.stop()
+     
 class TestApp(App):
 
     def build(self):
         sm = ScreenManager()
         menu_screen = MainMenu(name='menu')
-        button_layout = BoxLayout(orientation='vertical')
-        start_button = Button(text='Go to Game', on_press=self.switch_to_game)
-        quit_button = Button(text='Quit', on_press=self.quit_app)
-        button_layout.add_widget(start_button)
-        button_layout.add_widget(quit_button)
-        menu_screen.add_widget(button_layout)
         sm.add_widget(menu_screen)
         game_screen = MainApp(name='game')
         sm.add_widget(game_screen)
-        
         return sm
-
-    def switch_to_game(self, instance):
-        self.root.current = 'game'
-        self.root.get_screen('game').reset_game()
-
-    def quit_app(self, instance):
-        App.get_running_app().stop()
-
 if __name__ == "__main__":
     TestApp().run()
