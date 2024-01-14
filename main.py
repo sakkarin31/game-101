@@ -24,17 +24,25 @@ def collides(rect1, rect2):
 class MainMenu(Screen):
     pass
 
-class Background(Widget):
-    pass
-
 class Character(Image):
-    velocity = NumericProperty(0)
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.character = Image(source='character.png')
         self.size_hint = (None, None)  
         self.size = (400, 300)
         self.pos = 50,50
+        
+class Background(Widget):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.background = Image(source='background.png', allow_stretch=True, keep_ratio=False)
+        self.add_widget(self.background)
+
+    def on_size(self, *args):
+        self.background.size = self.size
+        self.background.pos = self.pos
+
+
 
 class Arrow(Image):
     velocity = NumericProperty(0)
@@ -60,8 +68,6 @@ class ArrowHandler(Widget):
                 arrow.x -= 500 * dt
                 arrow.y += 200 * dt
 
-class GameWidget(Widget):
-    pass
 
 class MainApp(Screen):
     enemy_pos = ObjectProperty((2000, 300))
@@ -69,11 +75,11 @@ class MainApp(Screen):
     countdown_label = Label(text='', font_size=20, pos_hint={'right': 1, 'top': 1})
     countdown_seconds = 120
     initial_enemy_speed = 600
-    initial_countdown_seconds = 120
+    initial_countdown_seconds = 10
     game_over = False 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.background = Image(source='background.png', size=(Window.width, Window.height), pos=(0, 0))
+        self.background = Background()
         self.add_widget(self.background)
         self.character = Character()
         self.add_widget(self.character)
@@ -89,6 +95,7 @@ class MainApp(Screen):
         Clock.schedule_interval(self.character_move, 1/60)
         self.reset_game()
     
+
     def update_countdown(self, dt):
         if not self.game_over:
             self.countdown_seconds -= 1
@@ -156,16 +163,16 @@ class MainApp(Screen):
             self.create_enemy()
 
         if collides((cur_x, cur_y, 50, 50), (self.enemy_pos[0], self.enemy_pos[1], self.enemy.size[0] - 250, self.enemy.size[1] - 180)):
-            self.gameover()
+            self.show_gameover_popup()
 
         for arrow in self.arrow_handler.children:
             if isinstance(arrow, Arrow) and collides((cur_x, cur_y, 50, 50), (arrow.x, arrow.y, arrow.width, arrow.height)):
-                self.gameover()
+                self.show_gameover_popup()
 
         self.arrow_handler.move_arrow(dt)
 
         if cur_x < -200 or cur_x > Window.width - 100 or cur_y < -100 or cur_y > Window.height - 100:
-            self.gameover()
+            self.show_gameover_popup()
 
         self.character.pos = (cur_x, cur_y)
 
@@ -173,9 +180,6 @@ class MainApp(Screen):
         self.popup.dismiss()
         App.get_running_app().root.current = 'menu'
 
-    def gameover(self):
-        self.game_over = True
-        self.show_gameover_popup()
     
     def show_gameover_popup(self):
         content = BoxLayout(orientation='vertical')
@@ -207,10 +211,9 @@ class TestApp(App):
         button_layout.add_widget(quit_button)
         menu_screen.add_widget(button_layout)
         sm.add_widget(menu_screen)
-        background = Background()
         game_screen = MainApp(name='game')
         sm.add_widget(game_screen)
-        game_screen.add_widget(background)
+        
         return sm
 
     def switch_to_game(self, instance):
