@@ -80,7 +80,7 @@ class Arrow(Image):
     velocity = NumericProperty(0)
 
 class ArrowHandler(Widget):
-    creating_arrows = True  
+    creating_arrows = True
 
     def create_arrow(self, pos):
         if self.creating_arrows and not self.parent.game_over:
@@ -94,11 +94,17 @@ class ArrowHandler(Widget):
     def start_creating_arrows(self):
         self.creating_arrows = True
 
-    def move_arrow(self, dt):
+    def move_arrows(self, dt):
+        arrows_to_remove = []
         for arrow in self.children:
             if isinstance(arrow, Arrow):
                 arrow.x -= 500 * dt
                 arrow.y += 200 * dt
+                if arrow.x < -arrow.width or arrow.y > Window.height:
+                    arrows_to_remove.append(arrow)
+
+        for arrow in arrows_to_remove:
+            self.remove_widget(arrow)
 
 
 class MainApp(Screen):
@@ -160,6 +166,8 @@ class MainApp(Screen):
         self.countdown_label.text = f'Time left: {self.countdown_seconds} seconds'
         self.create_enemy()
         self.arrow_handler.clear_widgets()
+        self.hp = self.initial_hp
+        self.update_hp_label() 
         
     def pause_game(self, *args):
         Clock.unschedule(self.character_move)
@@ -257,7 +265,7 @@ class MainApp(Screen):
             if isinstance(arrow, Arrow) and collides((cur_x, cur_y, 50, 50), (arrow.x, arrow.y, arrow.width, arrow.height)):
                 self.take_damage(0)
 
-        self.arrow_handler.move_arrow(dt)
+        self.arrow_handler.move_arrows(dt)
 
         if cur_x < -200 or cur_x > Window.width - 100 or cur_y < -100 or cur_y > Window.height - 100:
             self.show_free_popup()
